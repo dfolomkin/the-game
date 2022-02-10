@@ -28,13 +28,13 @@ module.exports = {
       hash: true,
     }),
     new CopyWebpackPlugin({
-      patterns: [{ from: './assets/img', to: './img' }],
+      patterns: [{ from: 'assets/img', to: 'img' }],
     }),
   ],
   devtool: 'source-map',
   devServer: {
     static: './dist',
     compress: true,
-    port: 1001,
+    port: 2022,
   },
 };
