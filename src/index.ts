@@ -43,7 +43,15 @@ const bg = {
 let player;
 const balloons = [];
 const coins = [];
-const captions = { pressEnter: undefined, lifes: undefined, score: undefined };
+// TODO why undefined?
+const captions = {
+  pressEnter: undefined,
+  lifes: undefined,
+  score: undefined,
+  grats: undefined,
+  totalScore: undefined,
+  gameOver: undefined,
+};
 let cursors;
 let keys;
 let mainTimer = 0;
@@ -60,6 +68,8 @@ const getDeltaAlpha = (t) => 1 / (t / 17);
 const getRandomSpeedStep = (s) => Math.floor(Math.random() * s) + 1;
 const getRandomOutOfBounds = (dx) => Math.floor(Math.random() * (dx + 1));
 const getRandomAltitude = (y) => Math.floor(Math.random() * (y + 1));
+const centerText = (textObject) =>
+  (textObject.x = SCREEN.WIDTH / 2 - Math.floor(textObject.width / 2));
 
 const timings = {
   bgAppear: 2000,
@@ -71,7 +81,9 @@ const timings = {
   bgChange4: 75000,
   bgChange5: 80000,
   bgSunAppear: 82000,
-  end: 95000,
+  playerOut: 95000,
+  finalFade: 97000,
+  totalScoreAppear: 100000,
 };
 
 let playerOrigins = {
@@ -103,6 +115,7 @@ const coinsSpeedSteps = [
 ];
 
 let isCollideblesRenew;
+let isGameOver;
 
 const gameData = {
   lifes: 3,
@@ -110,7 +123,7 @@ const gameData = {
 };
 
 function create() {
-  // why forEach doesnt work ???
+  // TODO why forEach doesnt work ???
   for (let i = 0; i < layersCount; i++) {
     layers[i] = this.add.layer();
     layers[i].setDepth(i);
@@ -264,10 +277,11 @@ function create() {
   });
   layers[4].add([...balloons, ...coins, explosion]);
 
-  captions.pressEnter = this.add.text(360, 560, 'PRESS ENTER', {
+  captions.pressEnter = this.add.text(0, 560, 'PRESS ENTER', {
     fontFamily: 'Common Pixel',
     fontSize: '32pt',
   });
+  centerText(captions.pressEnter);
   captions.lifes = this.add.text(24, 16, 'LIFES x 3', {
     fontFamily: 'Common Pixel',
     fontSize: '16pt',
@@ -276,10 +290,35 @@ function create() {
     fontFamily: 'Common Pixel',
     fontSize: '16pt',
   });
-  layers[8].add([captions.pressEnter, captions.lifes, captions.score]);
+  captions.grats = this.add.text(0, 300, 'GRATS!', {
+    fontFamily: 'Common Pixel',
+    fontSize: '32pt',
+  });
+  centerText(captions.grats);
+  captions.totalScore = this.add.text(0, 400, 'COINS COLLECTED x 99', {
+    fontFamily: 'Common Pixel',
+    fontSize: '24pt',
+  });
+  centerText(captions.totalScore);
+  captions.gameOver = this.add.text(0, 360, 'GAME OVER', {
+    fontFamily: 'Common Pixel',
+    fontSize: '32pt',
+  });
+  centerText(captions.gameOver);
+  layers[8].add([
+    captions.pressEnter,
+    captions.lifes,
+    captions.score,
+    captions.grats,
+    captions.totalScore,
+    captions.gameOver,
+  ]);
   captions.pressEnter.alpha = 0;
   captions.lifes.alpha = 0;
   captions.score.alpha = 0;
+  captions.grats.alpha = 0;
+  captions.totalScore.alpha = 0;
+  captions.gameOver.alpha = 0;
 
   cursors = this.input.keyboard.createCursorKeys();
   keys = this.input.keyboard.addKeys({
@@ -296,7 +335,7 @@ function create() {
 const coinOverlapShift = 16;
 
 // when player is blinking he is uncontrollable and uncollidable
-let isDeathBlinking = false;
+let isUncontrollable = false;
 
 function collectCoinMixin() {
   // play sound
@@ -305,19 +344,28 @@ function collectCoinMixin() {
 }
 
 function collectCoin1() {
-  if (Math.abs(player.x - coins[0].x) <= coinOverlapShift && !isDeathBlinking) {
+  if (
+    Math.abs(player.x - coins[0].x) <= coinOverlapShift &&
+    !isUncontrollable
+  ) {
     coins[0].x = -48;
     collectCoinMixin();
   }
 }
 function collectCoin2() {
-  if (Math.abs(player.x - coins[1].x) <= coinOverlapShift && !isDeathBlinking) {
+  if (
+    Math.abs(player.x - coins[1].x) <= coinOverlapShift &&
+    !isUncontrollable
+  ) {
     coins[1].x = -48;
     collectCoinMixin();
   }
 }
 function collectCoin3() {
-  if (Math.abs(player.x - coins[2].x) <= coinOverlapShift && !isDeathBlinking) {
+  if (
+    Math.abs(player.x - coins[2].x) <= coinOverlapShift &&
+    !isUncontrollable
+  ) {
     coins[2].x = -48;
     collectCoinMixin();
   }
@@ -329,30 +377,34 @@ let deathBlinkTimeout;
 const balloonOverlapShift = 16;
 
 function collideBalloonMixin() {
-  isDeathBlinking = true;
+  if (gameData.lifes == 1) {
+    isGameOver = true;
+  } else {
+    isUncontrollable = true;
 
-  // play sound
-  gameData.lifes -= 1;
-  captions.lifes.setText('LIFES x ' + gameData.lifes);
+    // play sound
+    gameData.lifes -= 1;
+    captions.lifes.setText('LIFES x ' + gameData.lifes);
 
-  player.x = playerOrigins.x;
-  player.y = playerOrigins.y;
+    player.x = playerOrigins.x;
+    player.y = playerOrigins.y;
 
-  if (deathBlinkInterval) {
-    clearInterval(deathBlinkInterval);
+    if (deathBlinkInterval) {
+      clearInterval(deathBlinkInterval);
+    }
+    deathBlinkInterval = setInterval(() => {
+      player.alpha = Number(!player.alpha);
+    }, 200);
+
+    if (deathBlinkTimeout) {
+      clearTimeout(deathBlinkTimeout);
+    }
+    deathBlinkTimeout = setInterval(() => {
+      clearInterval(deathBlinkInterval);
+      player.alpha = 1;
+      isUncontrollable = false;
+    }, 1600);
   }
-  deathBlinkInterval = setInterval(() => {
-    player.alpha = Number(!player.alpha);
-  }, 200);
-
-  if (deathBlinkTimeout) {
-    clearTimeout(deathBlinkTimeout);
-  }
-  deathBlinkTimeout = setInterval(() => {
-    clearInterval(deathBlinkInterval);
-    player.alpha = 1;
-    isDeathBlinking = false;
-  }, 1600);
 
   explosion.anims.play('explosion-start', true);
 }
@@ -360,7 +412,7 @@ function collideBalloonMixin() {
 function collideBalloon1() {
   if (
     Math.abs(player.x - balloons[0].x) <= balloonOverlapShift &&
-    !isDeathBlinking
+    !isUncontrollable
   ) {
     explosion.x = balloons[0].x - 30;
     explosion.y = balloons[0].y;
@@ -371,7 +423,7 @@ function collideBalloon1() {
 function collideBalloon2() {
   if (
     Math.abs(player.x - balloons[1].x) <= balloonOverlapShift &&
-    !isDeathBlinking
+    !isUncontrollable
   ) {
     explosion.x = balloons[1].x - 30;
     explosion.y = balloons[1].y;
@@ -431,11 +483,16 @@ function update(t, dt) {
   // THE GAME -----------------------------------------------------------------
   if (isEnterPressed) {
     clearInterval(blinkTimer);
-    layers[5].alpha = 1;
 
-    captions.pressEnter.alpha = 0;
-    captions.lifes.alpha = 1;
-    captions.score.alpha = 1;
+    if (mainTimer < timings.playerOut) {
+      layers[5].alpha = 1;
+
+      captions.pressEnter.alpha = 0;
+      if (!isGameOver) {
+        captions.lifes.alpha = 1;
+        captions.score.alpha = 1;
+      }
+    }
 
     // STAGE 1 ----------------------------------------------------------------
     if (mainTimer < timings.bgChange1) {
@@ -522,14 +579,14 @@ function update(t, dt) {
       // bgNeonGrid.anims.play('grid-start', true);
     }
 
-    if (mainTimer > timings.bgChange5) {
+    if (mainTimer >= timings.bgChange5) {
       if (layers[3].alpha !== 1) {
         layers[3].alpha = 1;
       }
       // bgNeonGrid.anims.play('grid-start', true);
     }
 
-    if (mainTimer > timings.bgSunAppear) {
+    if (mainTimer >= timings.bgSunAppear) {
       if (bgNeonGlow.y >= 150) {
         bgNeonGlow.y -= 2;
       }
@@ -552,7 +609,7 @@ function update(t, dt) {
       balloons[0].x = SCREEN.WIDTH + getRandomOutOfBounds(300);
       balloons[0].y = getRandomAltitude(500);
       balloonsSpeedSteps[0] = getRandomSpeedStep(3);
-      if (mainTimer > timings.bgChangeSpeed1) {
+      if (mainTimer >= timings.bgChangeSpeed1) {
         balloonsSpeedSteps[0] = getRandomSpeedStep(3) * 2;
       }
     }
@@ -560,7 +617,7 @@ function update(t, dt) {
       balloons[1].x = SCREEN.WIDTH + getRandomOutOfBounds(300);
       balloons[1].y = getRandomAltitude(500);
       balloonsSpeedSteps[1] = getRandomSpeedStep(3);
-      if (mainTimer > timings.bgChangeSpeed1) {
+      if (mainTimer >= timings.bgChangeSpeed1) {
         balloonsSpeedSteps[1] = getRandomSpeedStep(3) * 2;
       }
     }
@@ -574,7 +631,7 @@ function update(t, dt) {
       coins[0].x = SCREEN.WIDTH + getRandomOutOfBounds(600);
       coins[0].y = getRandomAltitude(500);
       coinsSpeedSteps[0] = getRandomSpeedStep(2);
-      if (mainTimer > timings.bgChangeSpeed1) {
+      if (mainTimer >= timings.bgChangeSpeed1) {
         coinsSpeedSteps[0] = getRandomSpeedStep(2) * 2;
       }
     }
@@ -582,7 +639,7 @@ function update(t, dt) {
       coins[1].x = SCREEN.WIDTH + getRandomOutOfBounds(600);
       coins[1].y = getRandomAltitude(500);
       coinsSpeedSteps[0] = getRandomSpeedStep(2);
-      if (mainTimer > timings.bgChangeSpeed1) {
+      if (mainTimer >= timings.bgChangeSpeed1) {
         coinsSpeedSteps[1] = getRandomSpeedStep(2) * 2;
       }
     }
@@ -590,16 +647,16 @@ function update(t, dt) {
       coins[1].x = SCREEN.WIDTH + getRandomOutOfBounds(600);
       coins[1].y = getRandomAltitude(500);
       coinsSpeedSteps[0] = getRandomSpeedStep(2);
-      if (mainTimer > timings.bgChangeSpeed1) {
+      if (mainTimer >= timings.bgChangeSpeed1) {
         coinsSpeedSteps[1] = getRandomSpeedStep(2) * 2;
       }
     }
 
-    if (cursors.up.isDown && !isDeathBlinking) {
+    if (cursors.up.isDown && !isUncontrollable) {
       player.setVelocityY(-160);
       player.setVelocityX(0);
       player.anims.play('player-up', true);
-    } else if (cursors.down.isDown && !isDeathBlinking) {
+    } else if (cursors.down.isDown && !isUncontrollable) {
       if (player.y < 600) {
         player.setVelocityY(160);
         player.setVelocityX(0);
@@ -608,11 +665,11 @@ function update(t, dt) {
         player.setVelocityX(0);
       }
       player.anims.play('player-down', true);
-    } else if (cursors.left.isDown && !isDeathBlinking) {
+    } else if (cursors.left.isDown && !isUncontrollable) {
       player.setVelocityY(0);
       player.setVelocityX(-220);
       player.anims.play('player-up', true);
-    } else if (cursors.right.isDown && !isDeathBlinking) {
+    } else if (cursors.right.isDown && !isUncontrollable) {
       if (player.x < 700) {
         player.setVelocityY(0);
         player.setVelocityX(180);
@@ -627,8 +684,34 @@ function update(t, dt) {
     }
   }
 
-  if (mainTimer > timings.end) {
-    isDeathBlinking = true;
+  if (mainTimer >= timings.playerOut) {
+    // TODO player is already out of control in isEnterPressed
+    isUncontrollable = true;
+    captions.lifes.alpha -= 0.005;
+    captions.score.alpha -= 0.005;
     player.x += 10;
+    if (player.x >= 800) {
+      layers[5].alpha -= 0.05;
+    }
+  }
+
+  if (mainTimer >= timings.finalFade) {
+    layers[7].alpha += 0.005;
+  }
+
+  if (mainTimer >= timings.totalScoreAppear) {
+    captions.grats.setText('GRATS!');
+    captions.totalScore.setText('COINS COLLECTED ' + gameData.score);
+    captions.grats.alpha += 0.005;
+    captions.totalScore.alpha += 0.005;
+  }
+
+  if (isGameOver) {
+    // TODO player is already out of control in isEnterPressed
+    isUncontrollable = true;
+    layers[7].alpha += 0.05;
+    captions.gameOver.alpha += 0.005;
+    captions.lifes.alpha -= 0.05;
+    captions.score.alpha -= 0.05;
   }
 }
