@@ -1,6 +1,7 @@
 const imgPath = './img';
 const IMG = {
   BG_WHITE: `${imgPath}/bg-white.svg`,
+  BG_BLACK: `${imgPath}/bg-black.svg`,
   BG_S1_L1: `${imgPath}/bg-winter-1-l1.png`,
   BG_S1_L2: `${imgPath}/bg-winter-1-l2.png`,
   BG_S2_L1: `${imgPath}/bg-winter-2-l1.png`,
@@ -21,6 +22,7 @@ const IMG = {
 
 export function preload() {
   this.load.image('bg-white', IMG.BG_WHITE);
+  this.load.image('bg-black', IMG.BG_BLACK);
   this.load.image('bg-s1-l1', IMG.BG_S1_L1);
   this.load.image('bg-s1-l2', IMG.BG_S1_L2);
   this.load.image('bg-s2-l1', IMG.BG_S2_L1);
@@ -40,14 +42,11 @@ export function preload() {
     frameWidth: 80,
     frameHeight: 64,
   });
-  this.load.spritesheet('balloon1', IMG.BALLOON, {
+  this.load.spritesheet('balloon', IMG.BALLOON, {
     frameWidth: 70,
     frameHeight: 100,
   });
-  this.load.spritesheet('balloon2', IMG.BALLOON, {
-    frameWidth: 70,
-    frameHeight: 100,
-  });
+
   this.load.spritesheet('explosion', IMG.EXPLOSION, {
     frameWidth: 150,
     frameHeight: 150,
