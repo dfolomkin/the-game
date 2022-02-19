@@ -28,7 +28,10 @@ module.exports = {
       hash: true,
     }),
     new CopyWebpackPlugin({
-      patterns: [{ from: 'assets/img', to: 'img' }],
+      patterns: [
+        { from: 'assets/img', to: 'img' },
+        { from: 'assets/aud', to: 'aud' },
+      ],
     }),
   ],
   devtool: 'source-map',

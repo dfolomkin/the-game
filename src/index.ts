@@ -22,6 +22,7 @@ const config = {
   fps: {
     target: 30,
   },
+
   scene: {
     preload: preload,
     create: create,
@@ -122,12 +123,26 @@ const gameData = {
   score: 0,
 };
 
+const audio = {
+  intro: undefined,
+  mainTheme: undefined,
+  gameOver: undefined,
+  explosion: undefined,
+  coinCollect: undefined,
+};
+
 function create() {
   // TODO why forEach doesnt work ???
   for (let i = 0; i < layersCount; i++) {
     layers[i] = this.add.layer();
     layers[i].setDepth(i);
   }
+
+  audio.intro = this.sound.add('intro');
+  audio.mainTheme = this.sound.add('main-theme');
+  audio.gameOver = this.sound.add('game-over');
+  audio.explosion = this.sound.add('explosion');
+  audio.coinCollect = this.sound.add('coin-collect');
 
   // STAGE BACKGROUNDS --------------------------------------------------------
   bgWhite = this.add
@@ -338,7 +353,9 @@ const coinOverlapShift = 16;
 let isUncontrollable = false;
 
 function collectCoinMixin() {
-  // play sound
+  audio.coinCollect.play({
+    volume: 0.1,
+  });
   gameData.score += 1;
   captions.score.setText('COINS x ' + gameData.score);
 }
@@ -377,12 +394,15 @@ let deathBlinkTimeout;
 const balloonOverlapShift = 16;
 
 function collideBalloonMixin() {
+  audio.explosion.play({
+    volume: 0.4,
+  });
+
   if (gameData.lifes == 1) {
     isGameOver = true;
   } else {
     isUncontrollable = true;
 
-    // play sound
     gameData.lifes -= 1;
     captions.lifes.setText('LIFES x ' + gameData.lifes);
 
@@ -445,6 +465,12 @@ function update(t, dt) {
 
   // INTRO --------------------------------------------------------------------
   if (!isEnterPressed) {
+    if (!audio.intro.isPlaying && mainTimer < timings.bgAppear / 2) {
+      audio.intro.play({
+        volume: 0.2,
+      });
+    }
+
     if (mainTimer < timings.bgAppear) {
       layers[1].alpha += getDeltaAlpha(timings.bgAppear);
       layers[6].alpha += getDeltaAlpha(timings.bgAppear);
@@ -483,6 +509,12 @@ function update(t, dt) {
   // THE GAME -----------------------------------------------------------------
   if (isEnterPressed) {
     clearInterval(blinkTimer);
+
+    if (!audio.mainTheme.isPlaying) {
+      audio.mainTheme.play({
+        volume: 0.2,
+      });
+    }
 
     if (mainTimer < timings.playerOut) {
       layers[5].alpha = 1;
@@ -708,6 +740,13 @@ function update(t, dt) {
 
   if (isGameOver) {
     // TODO player is already out of control in isEnterPressed
+    audio.mainTheme.stop();
+    if (!audio.gameOver.isPlaying) {
+      audio.gameOver.play({
+        volume: 0.2,
+      });
+    }
+
     isUncontrollable = true;
     layers[7].alpha += 0.05;
     captions.gameOver.alpha += 0.005;

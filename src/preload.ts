@@ -20,6 +20,15 @@ const IMG = {
   COIN: `${imgPath}/coin.png`,
 };
 
+const audPath = './aud';
+const AUD = {
+  INTRO: `${audPath}/Zoom Down FX 001.wav`,
+  MAIN_THEME: `${audPath}/never-gonna-give-u-up.mp3`,
+  GAME_OVER: `${audPath}/astronomia.mp3`,
+  EXPLOSION: `${audPath}/Snare 002.wav`,
+  COIN_COLLECT: `${audPath}/mario-coin-sound.mp3`,
+};
+
 export function preload() {
   this.load.image('bg-white', IMG.BG_WHITE);
   this.load.image('bg-black', IMG.BG_BLACK);
@@ -55,4 +64,9 @@ export function preload() {
     frameWidth: 48,
     frameHeight: 48,
   });
+  this.load.audio('intro', AUD.INTRO);
+  this.load.audio('main-theme', AUD.MAIN_THEME);
+  this.load.audio('game-over', AUD.GAME_OVER);
+  this.load.audio('explosion', AUD.EXPLOSION);
+  this.load.audio('coin-collect', AUD.COIN_COLLECT);
 }
