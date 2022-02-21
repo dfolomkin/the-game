@@ -69,4 +69,9 @@ export function preload() {
   this.load.audio('game-over', AUD.GAME_OVER);
   this.load.audio('explosion', AUD.EXPLOSION);
   this.load.audio('coin-collect', AUD.COIN_COLLECT);
+
+  this.load.script(
+    'webfont',
+    'https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js'
+  );
 }

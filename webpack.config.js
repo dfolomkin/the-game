@@ -31,6 +31,7 @@ module.exports = {
       patterns: [
         { from: 'assets/img', to: 'img' },
         { from: 'assets/aud', to: 'aud' },
+        { from: 'assets/fnt', to: 'fnt' },
       ],
     }),
   ],

@@ -24,6 +24,7 @@ const config = {
   },
 
   scene: {
+    init: init,
     preload: preload,
     create: create,
     update: update,
@@ -31,6 +32,15 @@ const config = {
 };
 
 const game = new Phaser.Game(config as Phaser.Types.Core.GameConfig);
+
+function init() {
+  // const element = document.createElement('style');
+  // document.head.appendChild(element);
+  // const sheet = element.sheet;
+  // const styles =
+  //   '@font-face { font-family: "Common Pixel"; src: url("fnt/common-pixel.ttf") format("ttf"); }\n';
+  // sheet.insertRule(styles, 0);
+}
 
 let bgWhite;
 let bgBlack;
@@ -132,6 +142,21 @@ const audio = {
 };
 
 function create() {
+  const canvas = document.getElementsByTagName('canvas')[0];
+  if (canvas) {
+    const paddingXSize = Math.floor(
+      (document.documentElement.clientWidth - SCREEN.WIDTH) / 2
+    );
+    const paddingYSize = Math.floor(
+      (document.documentElement.clientHeight - SCREEN.HEIGHT) / 2
+    );
+
+    canvas.style.marginLeft = paddingXSize + 'px';
+    canvas.style.marginRight = paddingXSize + 'px';
+    canvas.style.marginTop = paddingYSize + 'px';
+    canvas.style.marginBottom = paddingYSize + 'px';
+  }
+
   // TODO why forEach doesnt work ???
   for (let i = 0; i < layersCount; i++) {
     layers[i] = this.add.layer();
@@ -292,48 +317,58 @@ function create() {
   });
   layers[4].add([...balloons, ...coins, explosion]);
 
-  captions.pressEnter = this.add.text(0, 560, 'PRESS ENTER', {
-    fontFamily: 'Common Pixel',
-    fontSize: '32pt',
+  const scene = this;
+
+  // @ts-ignore:next-line
+  WebFont.load({
+    custom: {
+      families: ['Common Pixel'],
+    },
+    active: function () {
+      captions.pressEnter = scene.add.text(0, 560, 'PRESS ENTER', {
+        fontFamily: 'Common Pixel',
+        fontSize: '32pt',
+      });
+      centerText(captions.pressEnter);
+      captions.lifes = scene.add.text(24, 16, 'LIFES x 3', {
+        fontFamily: 'Common Pixel',
+        fontSize: '16pt',
+      });
+      captions.score = scene.add.text(880, 16, 'COINS x 0', {
+        fontFamily: 'Common Pixel',
+        fontSize: '16pt',
+      });
+      captions.grats = scene.add.text(0, 300, 'GRATS!', {
+        fontFamily: 'Common Pixel',
+        fontSize: '32pt',
+      });
+      centerText(captions.grats);
+      captions.totalScore = scene.add.text(0, 400, 'COINS COLLECTED x 99', {
+        fontFamily: 'Common Pixel',
+        fontSize: '24pt',
+      });
+      centerText(captions.totalScore);
+      captions.gameOver = scene.add.text(0, 360, 'GAME OVER', {
+        fontFamily: 'Common Pixel',
+        fontSize: '32pt',
+      });
+      centerText(captions.gameOver);
+      layers[8].add([
+        captions.pressEnter,
+        captions.lifes,
+        captions.score,
+        captions.grats,
+        captions.totalScore,
+        captions.gameOver,
+      ]);
+      captions.pressEnter.alpha = 0;
+      captions.lifes.alpha = 0;
+      captions.score.alpha = 0;
+      captions.grats.alpha = 0;
+      captions.totalScore.alpha = 0;
+      captions.gameOver.alpha = 0;
+    },
   });
-  centerText(captions.pressEnter);
-  captions.lifes = this.add.text(24, 16, 'LIFES x 3', {
-    fontFamily: 'Common Pixel',
-    fontSize: '16pt',
-  });
-  captions.score = this.add.text(880, 16, 'COINS x 0', {
-    fontFamily: 'Common Pixel',
-    fontSize: '16pt',
-  });
-  captions.grats = this.add.text(0, 300, 'GRATS!', {
-    fontFamily: 'Common Pixel',
-    fontSize: '32pt',
-  });
-  centerText(captions.grats);
-  captions.totalScore = this.add.text(0, 400, 'COINS COLLECTED x 99', {
-    fontFamily: 'Common Pixel',
-    fontSize: '24pt',
-  });
-  centerText(captions.totalScore);
-  captions.gameOver = this.add.text(0, 360, 'GAME OVER', {
-    fontFamily: 'Common Pixel',
-    fontSize: '32pt',
-  });
-  centerText(captions.gameOver);
-  layers[8].add([
-    captions.pressEnter,
-    captions.lifes,
-    captions.score,
-    captions.grats,
-    captions.totalScore,
-    captions.gameOver,
-  ]);
-  captions.pressEnter.alpha = 0;
-  captions.lifes.alpha = 0;
-  captions.score.alpha = 0;
-  captions.grats.alpha = 0;
-  captions.totalScore.alpha = 0;
-  captions.gameOver.alpha = 0;
 
   cursors = this.input.keyboard.createCursorKeys();
   keys = this.input.keyboard.addKeys({
@@ -465,11 +500,12 @@ function update(t, dt) {
 
   // INTRO --------------------------------------------------------------------
   if (!isEnterPressed) {
-    if (!audio.intro.isPlaying && mainTimer < timings.bgAppear / 2) {
-      audio.intro.play({
-        volume: 0.2,
-      });
-    }
+    // TODO it works unstable
+    // if (!audio.intro.isPlaying && mainTimer < timings.bgAppear / 2) {
+    //   audio.intro.play({
+    //     volume: 0.2,
+    //   });
+    // }
 
     if (mainTimer < timings.bgAppear) {
       layers[1].alpha += getDeltaAlpha(timings.bgAppear);
@@ -608,14 +644,12 @@ function update(t, dt) {
     // STAGE 5 ----------------------------------------------------------------
     if (mainTimer >= timings.bgChange4 && mainTimer < timings.bgChange5) {
       layers[3].alpha += 0.0035;
-      // bgNeonGrid.anims.play('grid-start', true);
     }
 
     if (mainTimer >= timings.bgChange5) {
       if (layers[3].alpha !== 1) {
         layers[3].alpha = 1;
       }
-      // bgNeonGrid.anims.play('grid-start', true);
     }
 
     if (mainTimer >= timings.bgSunAppear) {
@@ -631,6 +665,42 @@ function update(t, dt) {
       // if (bgTower.x < 50) {
       //   bgTower.x = Math.random() * 300 + SCREEN.WIDTH;
       // }
+    }
+
+    if (mainTimer >= timings.playerOut) {
+      isUncontrollable = true;
+      captions.lifes.alpha -= 0.005;
+      captions.score.alpha -= 0.005;
+      player.x += 10;
+      if (player.x >= 800) {
+        layers[5].alpha -= 0.05;
+      }
+    }
+
+    if (mainTimer >= timings.finalFade) {
+      layers[7].alpha += 0.005;
+    }
+
+    if (mainTimer >= timings.totalScoreAppear) {
+      captions.grats.setText('GRATS!');
+      captions.totalScore.setText('COINS COLLECTED ' + gameData.score);
+      captions.grats.alpha += 0.005;
+      captions.totalScore.alpha += 0.005;
+    }
+
+    if (isGameOver) {
+      audio.mainTheme.stop();
+      if (!audio.gameOver.isPlaying) {
+        audio.gameOver.play({
+          volume: 0.2,
+        });
+      }
+
+      isUncontrollable = true;
+      layers[7].alpha += 0.05;
+      captions.gameOver.alpha += 0.005;
+      captions.lifes.alpha -= 0.05;
+      captions.score.alpha -= 0.05;
     }
 
     // BALLOONS ---------------------------------------------------------------
@@ -714,43 +784,5 @@ function update(t, dt) {
       player.setVelocityY(0);
       player.setVelocityX(0);
     }
-  }
-
-  if (mainTimer >= timings.playerOut) {
-    // TODO player is already out of control in isEnterPressed
-    isUncontrollable = true;
-    captions.lifes.alpha -= 0.005;
-    captions.score.alpha -= 0.005;
-    player.x += 10;
-    if (player.x >= 800) {
-      layers[5].alpha -= 0.05;
-    }
-  }
-
-  if (mainTimer >= timings.finalFade) {
-    layers[7].alpha += 0.005;
-  }
-
-  if (mainTimer >= timings.totalScoreAppear) {
-    captions.grats.setText('GRATS!');
-    captions.totalScore.setText('COINS COLLECTED ' + gameData.score);
-    captions.grats.alpha += 0.005;
-    captions.totalScore.alpha += 0.005;
-  }
-
-  if (isGameOver) {
-    // TODO player is already out of control in isEnterPressed
-    audio.mainTheme.stop();
-    if (!audio.gameOver.isPlaying) {
-      audio.gameOver.play({
-        volume: 0.2,
-      });
-    }
-
-    isUncontrollable = true;
-    layers[7].alpha += 0.05;
-    captions.gameOver.alpha += 0.005;
-    captions.lifes.alpha -= 0.05;
-    captions.score.alpha -= 0.05;
   }
 }
