@@ -24,7 +24,6 @@ const config = {
   },
 
   scene: {
-    init: init,
     preload: preload,
     create: create,
     update: update,
@@ -32,15 +31,6 @@ const config = {
 };
 
 const game = new Phaser.Game(config as Phaser.Types.Core.GameConfig);
-
-function init() {
-  // const element = document.createElement('style');
-  // document.head.appendChild(element);
-  // const sheet = element.sheet;
-  // const styles =
-  //   '@font-face { font-family: "Common Pixel"; src: url("fnt/common-pixel.ttf") format("ttf"); }\n';
-  // sheet.insertRule(styles, 0);
-}
 
 let bgWhite;
 let bgBlack;
@@ -318,7 +308,6 @@ function create() {
   layers[4].add([...balloons, ...coins, explosion]);
 
   const scene = this;
-
   // @ts-ignore:next-line
   WebFont.load({
     custom: {
@@ -531,7 +520,10 @@ function update(t, dt) {
       if (!blinkTimer) {
         blinkTimer = setInterval(() => {
           layers[5].alpha = Number(!layers[5].alpha);
-          captions.pressEnter.alpha = Number(!captions.pressEnter.alpha);
+          // font load issue
+          if (captions.pressEnter) {
+            captions.pressEnter.alpha = Number(!captions.pressEnter.alpha);
+          }
         }, 300);
       }
 
@@ -555,10 +547,18 @@ function update(t, dt) {
     if (mainTimer < timings.playerOut) {
       layers[5].alpha = 1;
 
-      captions.pressEnter.alpha = 0;
+      // font load issue
+      if (captions.pressEnter) {
+        captions.pressEnter.alpha = 0;
+      }
       if (!isGameOver) {
-        captions.lifes.alpha = 1;
-        captions.score.alpha = 1;
+        // font load issue
+        if (captions.lifes) {
+          captions.lifes.alpha = 1;
+        }
+        if (captions.score) {
+          captions.score.alpha = 1;
+        }
       }
     }
 
